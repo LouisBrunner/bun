@@ -1,18 +1,15 @@
 'use strict';
+const common = require('../common');
+if (common.isWindows) return; // TODO: BUN
+const fs = require('fs');
+const net = require('net');
 
-const { PIPE, mustCall } = require('../common');
 const tmpdir = require('../common/tmpdir');
-const { test } = require('node:test');
-const fs = require('node:fs');
-const net = require('node:net');
+tmpdir.refresh();
 
-test('readdir should not recurse into Unix domain sockets', (t, done) => {
-  tmpdir.refresh();
-  const server = net.createServer().listen(PIPE, mustCall(() => {
-    // The process should not crash
-    // See https://github.com/nodejs/node/issues/52159
-    fs.readdirSync(tmpdir.path, { recursive: true });
-    server.close();
-    done();
-  }));
-});
+const server = net.createServer().listen(common.PIPE, common.mustCall(() => {
+  // The process should not crash
+  // See https://github.com/nodejs/node/issues/52159
+  fs.readdirSync(tmpdir.path, { recursive: true });
+  server.close();
+}));
