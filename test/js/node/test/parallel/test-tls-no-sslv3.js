@@ -1,14 +1,10 @@
 'use strict';
 const common = require('../common');
-if (!common.hasCrypto) {
+if (!common.hasCrypto)
   common.skip('missing crypto');
-}
 
-const { opensslCli } = require('../common/crypto');
-
-if (opensslCli === false) {
+if (common.opensslCli === false)
   common.skip('node compiled without OpenSSL CLI.');
-}
 
 const assert = require('assert');
 const tls = require('tls');
@@ -21,13 +17,13 @@ const server = tls.createServer({ cert, key }, common.mustNotCall());
 const errors = [];
 let stderr = '';
 
-server.listen(0, '127.0.0.1', common.mustCall(function() {
+server.listen(0, '127.0.0.1', function() {
   const address = `${this.address().address}:${this.address().port}`;
   const args = ['s_client',
                 '-ssl3',
                 '-connect', address];
 
-  const client = spawn(opensslCli, args, { stdio: 'pipe' });
+  const client = spawn(common.opensslCli, args, { stdio: 'pipe' });
   client.stdout.pipe(process.stdout);
   client.stderr.pipe(process.stderr);
   client.stderr.setEncoding('utf8');
@@ -37,7 +33,7 @@ server.listen(0, '127.0.0.1', common.mustCall(function() {
     assert.strictEqual(exitCode, 1);
     server.close();
   }));
-}));
+});
 
 server.on('tlsClientError', (err) => errors.push(err));
 
@@ -46,6 +42,6 @@ process.on('exit', function() {
     common.printSkipMessage('`openssl s_client -ssl3` not supported.');
   } else {
     assert.strictEqual(errors.length, 1);
-    assert.match(errors[0].message, /:version too low/);
+    assert(/:version too low/.test(errors[0].message));
   }
 });
